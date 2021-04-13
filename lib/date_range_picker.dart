@@ -58,7 +58,7 @@ class _DatePickerHeader extends StatelessWidget {
     required this.mode,
     required this.onModeChanged,
     required this.orientation,
-  })  : assert(selectedFirstDate != null),
+  })   : assert(selectedFirstDate != null),
         assert(mode != null),
         assert(orientation != null),
         super(key: key);
@@ -741,8 +741,8 @@ class _MonthPickerState extends State<MonthPicker>
     if (!_isDisplayingLastMonth) {
       SemanticsService.announce(
           localizations.formatMonthYear(_nextMonthDate), textDirection);
-      _dayPickerController!.nextPage(
-          duration: _kMonthScrollDuration, curve: Curves.ease);
+      _dayPickerController!
+          .nextPage(duration: _kMonthScrollDuration, curve: Curves.ease);
     }
   }
 
@@ -750,8 +750,8 @@ class _MonthPickerState extends State<MonthPicker>
     if (!_isDisplayingFirstMonth) {
       SemanticsService.announce(
           localizations.formatMonthYear(_previousMonthDate), textDirection);
-      _dayPickerController!.previousPage(
-          duration: _kMonthScrollDuration, curve: Curves.ease);
+      _dayPickerController!
+          .previousPage(duration: _kMonthScrollDuration, curve: Curves.ease);
     }
   }
 
@@ -896,7 +896,7 @@ class YearPicker extends StatefulWidget {
     required this.onChanged,
     required this.firstDate,
     required this.lastDate,
-  })  : assert(!firstDate.isAfter(lastDate)),
+  })   : assert(!firstDate.isAfter(lastDate)),
         super(key: key);
 
   /// The currently selected date.
@@ -993,6 +993,7 @@ class _DatePickerDialog extends StatefulWidget {
     this.lastDate,
     this.selectableDayPredicate,
     this.initialDatePickerMode,
+    this.description,
   }) : super(key: key);
 
   final DateTime? initialFirstDate;
@@ -1001,6 +1002,7 @@ class _DatePickerDialog extends StatefulWidget {
   final DateTime? lastDate;
   final SelectableDayPredicate? selectableDayPredicate;
   final DatePickerMode? initialDatePickerMode;
+  final String description;
 
   @override
   _DatePickerDialogState createState() => new _DatePickerDialogState();
@@ -1014,6 +1016,8 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
     _selectedLastDate = widget.initialLastDate;
     _mode = widget.initialDatePickerMode;
   }
+
+  String _description = "";
 
   bool _announcedInitialDate = false;
 
@@ -1079,6 +1083,7 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
   }
 
   void _handleYearChanged(List<DateTime?> changes) {
+    _description = "";
     assert(changes.length == 2);
     _vibrate();
     setState(() {
@@ -1086,6 +1091,9 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
       _selectedFirstDate = changes[0];
       _selectedLastDate = changes[1];
     });
+    if (widget.description != null && _selectedFirstDate == _selectedLastDate) {
+      _description = widget.description;
+    }
   }
 
   void _handleDayChanged(List<DateTime?> changes) {
@@ -1126,7 +1134,7 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
           selectableDayPredicate: widget.selectableDayPredicate,
         );
       case DatePickerMode.year:
-        return  YearPicker(
+        return YearPicker(
           key: _pickerKey,
           selectedFirstDate: _selectedFirstDate!,
           selectedLastDate: _selectedLastDate,
@@ -1147,6 +1155,15 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
         child: _buildPicker(),
       ),
     );
+    final Widget errorText = Container(
+      padding: EdgeInsets.only(left: 20),
+      child: Text(
+        _description,
+        style: TextStyle(
+          color: Colors.red,
+        ),
+      ),
+    );
     final Widget actions = new ButtonBarTheme(
       data: ButtonBarThemeData(),
       child: new ButtonBar(
@@ -1156,7 +1173,15 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
             onPressed: _handleCancel,
           ),
           new FlatButton(
-            child: new Text(localizations.okButtonLabel),
+            child: new Text(
+              localizations.okButtonLabel,
+              style: TextStyle(
+                color: (_selectedLastDate == null ||
+                        _selectedFirstDate == _selectedLastDate)
+                    ? Colors.black26
+                    : Colors.blue,
+              ),
+            ),
             onPressed: _handleOk,
           ),
         ],
@@ -1188,6 +1213,7 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
                       picker,
+                      errorText,
                       actions,
                     ],
                   ),
@@ -1210,7 +1236,7 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
                     child: new Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[picker, actions],
+                      children: <Widget>[picker, errorText, actions],
                     ),
                   ),
                 ),
@@ -1268,6 +1294,7 @@ Future<List<DateTime>?> showDatePicker({
   required DateTime initialLastDate,
   required DateTime firstDate,
   required DateTime lastDate,
+  String description,
   SelectableDayPredicate? selectableDayPredicate,
   DatePickerMode initialDatePickerMode = DatePickerMode.day,
   Locale? locale,
@@ -1296,6 +1323,7 @@ Future<List<DateTime>?> showDatePicker({
     lastDate: lastDate,
     selectableDayPredicate: selectableDayPredicate,
     initialDatePickerMode: initialDatePickerMode,
+    description: description,
   );
 
   if (textDirection != null) {
